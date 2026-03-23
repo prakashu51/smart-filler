@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Form Filler",
+  "version": "1.0",
+  "description": "Automatically fills forms with fake data using Faker.js",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Smart Form Filler"
+  }
+}
