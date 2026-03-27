@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Filler Test - Dynamic Form</title>
+  <style>
+    :root {
+      --bg: #f3f5f9;
+      --panel: rgba(255, 255, 255, 0.96);
+      --border: #d6dce6;
+      --text: #142033;
+      --muted: #60708c;
+      --accent: #0a7a5a;
+      --accent-soft: #e6f7f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #e2fff5 0, transparent 28%),
+        radial-gradient(circle at bottom right, #dce8ff 0, transparent 30%),
+        var(--bg);
+    }
+
+    main {
+      max-width: 920px;
+      margin: 32px auto;
+      padding: 24px;
+    }
+
+    .intro {
+      margin-bottom: 20px;
+    }
+
+    .intro h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 760px;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 24px 80px rgba(17, 28, 45, 0.12);
+      padding: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    input,
+    textarea,
+    .combo-button,
+    .language-button {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--accent-soft);
+    }
+
+    .toolbar strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .toolbar span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .language-switcher {
+      display: flex;
+      gap: 8px;
+    }
+
+    .language-button {
+      width: auto;
+      min-width: 54px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .combo {
+      position: relative;
+    }
+
+    .combo-button {
+      text-align: left;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .combo-list {
+      position: absolute;
+      inset: calc(100% + 8px) 0 auto 0;
+      margin: 0;
+      padding: 8px;
+      list-style: none;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(17, 28, 45, 0.12);
+      display: none;
+      z-index: 2;
+    }
+
+    .combo-list[data-open="true"] {
+      display: block;
+    }
+
+    .combo-list li {
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .combo-list li:hover {
+      background: #eef5ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .status {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="intro">
+      <h1>Dynamic and Custom Control Test Form</h1>
+      <p>
+        Use this page to check delayed field rendering, custom combobox behavior,
+        and protection against accidental language selector changes.
+      </p>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div>
+          <strong>Language Switcher Test</strong>
+          <span>The extension should avoid selecting these buttons.</span>
+        </div>
+        <div class="language-switcher">
+          <button class="language-button" type="button">EN</button>
+          <button class="language-button" type="button">ES</button>
+          <button class="language-button" type="button">PT</button>
+        </div>
+      </div>
+
+      <form>
+        <div class="grid">
+          <div class="field">
+            <label for="fullName">Full Name</label>
+            <input id="fullName" name="fullName" type="text" placeholder="Enter full name">
+          </div>
+
+          <div class="field">
+            <label for="emailAddress">Email Address</label>
+            <input id="emailAddress" name="emailAddress" type="email" placeholder="name@example.com">
+          </div>
+
+          <div class="field full">
+            <label for="requestType">Request Type</label>
+            <div class="combo">
+              <button
+                id="requestType"
+                class="combo-button"
+                type="button"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="requestTypeList"
+              >
+                Select request type
+              </button>
+              <ul id="requestTypeList" class="combo-list" role="listbox" data-open="false">
+                <li role="option" data-value="demo">Product Demo</li>
+                <li role="option" data-value="quote">Pricing Quote</li>
+                <li role="option" data-value="support">Support Issue</li>
+              </ul>
+            </div>
+          </div>
+
+          <div id="delayedFields" class="field full hidden"></div>
+
+          <div class="field full">
+            <label for="message">Project Notes</label>
+            <textarea id="message" name="message" placeholder="Describe the request"></textarea>
+          </div>
+        </div>
+
+        <p class="status" id="statusText">
+          Delayed fields appear one second after a request type is selected.
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const comboButton = document.getElementById("requestType");
+    const comboList = document.getElementById("requestTypeList");
+    const delayedFields = document.getElementById("delayedFields");
+    const statusText = document.getElementById("statusText");
+
+    function closeCombo() {
+      comboList.dataset.open = "false";
+      comboButton.setAttribute("aria-expanded", "false");
+    }
+
+    function openCombo() {
+      comboList.dataset.open = "true";
+      comboButton.setAttribute("aria-expanded", "true");
+    }
+
+    comboButton.addEventListener("click", () => {
+      if (comboList.dataset.open === "true") {
+        closeCombo();
+      } else {
+        openCombo();
+      }
+    });
+
+    comboList.querySelectorAll("[role='option']").forEach((option) => {
+      option.addEventListener("click", () => {
+        comboButton.textContent = option.textContent;
+        closeCombo();
+        delayedFields.classList.add("hidden");
+        delayedFields.innerHTML = "";
+        statusText.textContent = "Loading dependent fields...";
+
+        setTimeout(() => {
+          delayedFields.innerHTML = [
+            '<label for="companyName">Company Name</label>',
+            '<input id="companyName" name="companyName" type="text" placeholder="Company name">',
+            '<label for="contactPhone">Contact Phone</label>',
+            '<input id="contactPhone" name="contactPhone" type="tel" placeholder="Phone number">'
+          ].join("");
+          delayedFields.classList.remove("hidden");
+          statusText.textContent = "Dependent fields are now visible.";
+        }, 1000);
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".combo")) {
+        closeCombo();
+      }
+    });
+  </script>
+</body>
+</html>
