@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Filler Test - Simple Form</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --border: #d6dce8;
+      --text: #162033;
+      --muted: #5f6b85;
+      --accent: #1f6feb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 840px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(14, 30, 62, 0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+    }
+
+    .inline input {
+      width: auto;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Simple Smoke Test Form</h1>
+      <p>
+        Use this page to validate basic autofill behavior after each iteration.
+        It covers common field types without any framework-specific behavior.
+      </p>
+    </section>
+
+    <section class="panel">
+      <form>
+        <div class="grid">
+          <div class="field">
+            <label for="firstName">First Name</label>
+            <input id="firstName" name="firstName" type="text" placeholder="Enter first name">
+          </div>
+
+          <div class="field">
+            <label for="lastName">Last Name</label>
+            <input id="lastName" name="lastName" type="text" placeholder="Enter last name">
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="name@example.com">
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone Number</label>
+            <input id="phone" name="phone" type="tel" placeholder="10 digit phone number">
+          </div>
+
+          <div class="field full">
+            <label for="address">Street Address</label>
+            <input id="address" name="address" type="text" placeholder="Street address">
+          </div>
+
+          <div class="field">
+            <label for="city">City</label>
+            <input id="city" name="city" type="text" placeholder="City">
+          </div>
+
+          <div class="field">
+            <label for="postalCode">Postal Code</label>
+            <input id="postalCode" name="postalCode" type="text" placeholder="Postal code">
+          </div>
+
+          <div class="field">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" placeholder="Company name">
+          </div>
+
+          <div class="field">
+            <label for="jobTitle">Job Title</label>
+            <input id="jobTitle" name="jobTitle" type="text" placeholder="Job title">
+          </div>
+
+          <div class="field">
+            <label for="favoriteColor">Favorite Color</label>
+            <input id="favoriteColor" name="favoriteColor" type="color">
+          </div>
+
+          <div class="field">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="url" placeholder="https://example.com">
+          </div>
+
+          <div class="field">
+            <label for="appointmentTime">Preferred Time</label>
+            <input id="appointmentTime" name="appointmentTime" type="time">
+          </div>
+
+          <div class="field">
+            <label for="startDate">Start Date</label>
+            <input id="startDate" name="startDate" type="date">
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Password">
+          </div>
+
+          <div class="field">
+            <label for="department">Department</label>
+            <select id="department" name="department">
+              <option value="">Select a department</option>
+              <option>Engineering</option>
+              <option>Product</option>
+              <option>Support</option>
+              <option>Operations</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="budget">Budget Range</label>
+            <input id="budget" name="budget" type="range" min="1000" max="10000" step="500">
+          </div>
+
+          <div class="field full">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" placeholder="Extra notes"></textarea>
+          </div>
+
+          <div class="field">
+            <label>Newsletter</label>
+            <div class="inline">
+              <input id="newsletter" name="newsletter" type="checkbox">
+              <label for="newsletter">Subscribe to updates</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Contact Preference</label>
+            <div class="inline">
+              <input id="contactEmail" name="contactPreference" type="radio" value="email">
+              <label for="contactEmail">Email</label>
+              <input id="contactPhone" name="contactPreference" type="radio" value="phone">
+              <label for="contactPhone">Phone</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button">Dummy Submit</button>
+          <span class="note">This page is only for extension smoke testing.</span>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
