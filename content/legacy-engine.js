@@ -11,40 +11,162 @@
       return;
     }
 
-    // Preserve current behavior for now. Locale-aware generation will move into
-    // the generator module in later iterations.
-    faker.locale = "en";
+    const fakerLocale = fillSettings && fillSettings.region === "IN" ? "en_IND" : "en";
+    faker.locale = fakerLocale;
+
+    const filledElements = new Set();
+    const radioGroups = new Set();
+
+    function incrementReport(key) {
+      if (report && typeof report[key] === "number") {
+        report[key] += 1;
+      }
+    }
+
+    function dispatchFieldEvents(element) {
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    function isVisible(element) {
+      if (!element || element.type === "hidden") {
+        return false;
+      }
+
+      const style = global.getComputedStyle(element);
+
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        !element.hidden &&
+        !element.closest("[hidden],[aria-hidden='true']")
+      );
+    }
+
+    function isFillable(element) {
+      return !!element && !element.disabled && !element.readOnly && isVisible(element);
+    }
+
+    function getFieldHint(element) {
+      const labelFromFor = element.id
+        ? document.querySelector(`label[for="${element.id}"]`)?.textContent || ""
+        : "";
+      const wrappedLabel = element.closest("label")?.textContent || "";
+      const nearbyLabel =
+        element.closest(".field, .form-group, [role='group']")?.querySelector("label")?.textContent || "";
+      const ariaLabel = element.getAttribute("aria-label") || "";
+      const placeholder = element.getAttribute("placeholder") || "";
+      const describedById = element.getAttribute("aria-describedby");
+      const describedBy = describedById
+        ? document.getElementById(describedById)?.textContent || ""
+        : "";
+      const identifier = [element.name, element.id].filter(Boolean).join(" ");
+
+      return [
+        labelFromFor,
+        wrappedLabel,
+        nearbyLabel,
+        ariaLabel,
+        placeholder,
+        describedBy,
+        identifier
+      ]
+        .join(" ")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function hasUserValue(element) {
+      if (element.matches("input, textarea")) {
+        if (element.type === "checkbox" || element.type === "radio") {
+          return element.checked;
+        }
+
+        return typeof element.value === "string" && element.value.trim() !== "";
+      }
+
+      if (element.matches("select")) {
+        return element.selectedIndex > 0 || !!element.value;
+      }
+
+      if (element.isContentEditable) {
+        return element.textContent.trim() !== "";
+      }
+
+      return false;
+    }
 
     function fillInput(input) {
-      const type = input.type.toLowerCase();
-      const name = (input.name || input.id || input.placeholder || "").toLowerCase();
-      const label = input.getAttribute("aria-label") || "";
+      if (!isFillable(input) || hasUserValue(input)) {
+        incrementReport("skipped");
+        return;
+      }
 
+      const type = input.type.toLowerCase();
+      const hint = getFieldHint(input);
       let value = "";
 
+      if (["button", "submit", "reset", "image", "file", "hidden"].includes(type)) {
+        incrementReport("skipped");
+        return;
+      }
+
       if (type === "text" || type === "search" || !type) {
-        if (name.includes("first") || label.includes("first")) {
+        if (hint.includes("first")) {
           value = faker.name.firstName();
-        } else if (name.includes("last") || label.includes("last")) {
+        } else if (hint.includes("last")) {
           value = faker.name.lastName();
-        } else if (name.includes("name") || label.includes("name")) {
+        } else if (hint.includes("full name") || hint.includes("name")) {
           value = faker.name.findName();
-        } else if (name.includes("address") || label.includes("address")) {
+        } else if (hint.includes("address")) {
           value = faker.address.streetAddress();
-        } else if (name.includes("city") || label.includes("city")) {
+        } else if (hint.includes("city")) {
           value = faker.address.city();
-        } else if (name.includes("zip") || name.includes("pincode") || name.includes("postal")) {
+        } else if (
+          hint.includes("zip") ||
+          hint.includes("postal") ||
+          hint.includes("pincode")
+        ) {
           value = faker.address.zipCode();
-        } else if (name.includes("company") || name.includes("organization")) {
+        } else if (
+          hint.includes("company") ||
+          hint.includes("organization") ||
+          hint.includes("employer")
+        ) {
           value = faker.company.companyName();
-        } else if (name.includes("job") || name.includes("title")) {
+        } else if (
+          hint.includes("job") ||
+          hint.includes("title") ||
+          hint.includes("role")
+        ) {
           value = faker.name.jobTitle();
+        } else if (
+          hint.includes("website") ||
+          hint.includes("site") ||
+          hint.includes("url")
+        ) {
+          value = faker.internet.url();
+        } else if (hint.includes("email")) {
+          value = faker.internet.email();
+        } else if (
+          hint.includes("phone") ||
+          hint.includes("mobile") ||
+          hint.includes("contact")
+        ) {
+          value = faker.phone.phoneNumber("##########");
         } else {
           value = faker.name.findName();
         }
       } else if (type === "email") {
         value = faker.internet.email();
-      } else if (type === "number" || name.includes("phone") || type === "tel") {
+      } else if (type === "number") {
+        const parsedMin = Number(input.min);
+        const parsedMax = Number(input.max);
+        const min = Number.isFinite(parsedMin) ? parsedMin : 1;
+        const max = Number.isFinite(parsedMax) ? parsedMax : Math.max(min + 1000, 9999);
+        value = faker.datatype.number({ min, max }).toString();
+      } else if (type === "tel") {
         value = faker.phone.phoneNumber("##########");
       } else if (type === "password") {
         value = faker.internet.password(10);
@@ -64,32 +186,65 @@
         value = Math.floor(Math.random() * (max - min + 1)) + min;
       } else if (type === "checkbox") {
         input.checked = Math.random() > 0.5;
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        dispatchFieldEvents(input);
+        incrementReport("filled");
         return;
       } else if (type === "radio") {
+        const groupKey = input.name || input.id;
+
+        if (!groupKey || radioGroups.has(groupKey)) {
+          incrementReport("skipped");
+          return;
+        }
+
+        radioGroups.add(groupKey);
         input.checked = true;
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        dispatchFieldEvents(input);
+        incrementReport("filled");
         return;
       }
 
       if (value) {
         input.value = value;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        dispatchFieldEvents(input);
+        incrementReport("filled");
+      } else {
+        incrementReport("skipped");
       }
     }
 
     function fillSelect(select) {
-      const options = select.options;
-
-      if (options.length > 1) {
-        const randomIndex = Math.floor(Math.random() * (options.length - 1)) + 1;
-        select.selectedIndex = randomIndex;
-        select.dispatchEvent(new Event("change", { bubbles: true }));
+      if (!isFillable(select) || hasUserValue(select)) {
+        incrementReport("skipped");
+        return;
       }
+
+      const validOptions = Array.from(select.options).filter((option, index) => {
+        if (index === 0 || option.disabled) {
+          return false;
+        }
+
+        const text = option.textContent.trim().toLowerCase();
+        return text !== "" && !text.startsWith("select");
+      });
+
+      if (validOptions.length === 0) {
+        incrementReport("skipped");
+        return;
+      }
+
+      const selectedOption = validOptions[Math.floor(Math.random() * validOptions.length)];
+      select.value = selectedOption.value;
+      dispatchFieldEvents(select);
+      incrementReport("filled");
     }
 
     function fillReactSelect(element) {
+      if (!isVisible(element)) {
+        incrementReport("skipped");
+        return;
+      }
+
       const reactSelectControl =
         element.querySelector(".react-select__control") ||
         element.querySelector('[class*="select__control"]') ||
@@ -117,10 +272,13 @@
               if (options.length > 0) {
                 const randomIndex = Math.floor(Math.random() * options.length);
                 options[randomIndex].click();
+                incrementReport("filled");
               }
             }
           }, delay);
         });
+      } else {
+        incrementReport("skipped");
       }
     }
 
@@ -134,7 +292,7 @@
         buttonText === "pt" ||
         buttonText === "es" ||
         buttonText.includes("english") ||
-        buttonText.includes("português") ||
+        buttonText.includes("portuguÃªs") ||
         buttonText.includes("language") ||
         buttonText.includes("idioma") ||
         buttonId.includes("language") ||
@@ -147,11 +305,11 @@
     }
 
     function fillCustomCombobox(button) {
-      if (isLanguageSelector(button)) {
+      if (!isFillable(button) || isLanguageSelector(button) || hasUserValue(button)) {
+        incrementReport("skipped");
         return;
       }
 
-      // Preserve current behavior during the structural refactor.
       const label = button.closest("div").previousElementSibling?.textContent || "";
       const isSurgicalPhase = label.toLowerCase().includes("surgical phase");
 
@@ -179,7 +337,7 @@
 
                 return (
                   !optionText.includes("english") &&
-                  !optionText.includes("português") &&
+                  !optionText.includes("portuguÃªs") &&
                   !optionText.includes("language") &&
                   !optionText.includes("idioma") &&
                   optionText !== "en" &&
@@ -197,6 +355,7 @@
                   : safeOptions[0];
 
                 selectedOption.click();
+                incrementReport("filled");
               }
             }
           }
@@ -204,7 +363,27 @@
       });
     }
 
-    const filledElements = new Set();
+    function fillTextarea(textarea) {
+      if (!isFillable(textarea) || hasUserValue(textarea)) {
+        incrementReport("skipped");
+        return;
+      }
+
+      textarea.value = faker.lorem.sentences(2);
+      dispatchFieldEvents(textarea);
+      incrementReport("filled");
+    }
+
+    function fillContentEditable(element) {
+      if (!isFillable(element) || hasUserValue(element)) {
+        incrementReport("skipped");
+        return;
+      }
+
+      element.textContent = faker.lorem.sentences(2);
+      dispatchFieldEvents(element);
+      incrementReport("filled");
+    }
 
     function fillForm() {
       const inputs = document.querySelectorAll("input");
@@ -212,6 +391,7 @@
       const textareas = document.querySelectorAll("textarea");
       const reactSelects = document.querySelectorAll('[class*="react-select"], [class*="Select"]');
       const comboboxes = document.querySelectorAll('button[role="combobox"]');
+      const contentEditables = document.querySelectorAll('[contenteditable="true"]');
 
       inputs.forEach((input) => {
         if (!filledElements.has(input)) {
@@ -229,9 +409,7 @@
 
       textareas.forEach((text) => {
         if (!filledElements.has(text)) {
-          text.value = faker.lorem.sentences(2);
-          text.dispatchEvent(new Event("input", { bubbles: true }));
-          text.dispatchEvent(new Event("change", { bubbles: true }));
+          fillTextarea(text);
           filledElements.add(text);
         }
       });
@@ -249,6 +427,13 @@
           filledElements.add(button);
         }
       });
+
+      contentEditables.forEach((element) => {
+        if (!filledElements.has(element)) {
+          fillContentEditable(element);
+          filledElements.add(element);
+        }
+      });
     }
 
     global.SmartFillerConstants.DYNAMIC_RETRY_DELAYS_MS.forEach((delay) => {
@@ -256,8 +441,17 @@
     });
 
     if (report) {
-      report.notes.push("Legacy engine executed through new Phase 1 scaffold");
+      report.notes.push(
+        `Legacy engine executed through new Phase 1 scaffold using faker locale ${fakerLocale}`
+      );
     }
+
+    const finalRetryDelay = Math.max.apply(null, global.SmartFillerConstants.DYNAMIC_RETRY_DELAYS_MS);
+    const asyncSelectionBufferMs = 1800;
+
+    return new Promise((resolve) => {
+      setTimeout(resolve, finalRetryDelay + asyncSelectionBufferMs);
+    });
   }
 
   global.SmartFillerLegacyEngine = {

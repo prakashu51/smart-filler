@@ -10,7 +10,7 @@
     global.SmartFillerObserver.createObserverPlaceholder();
 
     if (global.SmartFillerLegacyEngine && typeof global.SmartFillerLegacyEngine.run === "function") {
-      global.SmartFillerLegacyEngine.run(fillSettings, report);
+      await global.SmartFillerLegacyEngine.run(fillSettings, report);
     } else {
       console.error("Smart Filler legacy engine is unavailable.");
     }
