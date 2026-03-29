@@ -1,5 +1,7 @@
 (function initSmartFillerLegacyEngine(global) {
-  function run(fillSettings, report) {
+  function run(fillSettings, report, options) {
+    const executionOptions = options || {};
+
     console.log("Content script loaded");
     console.log("Using fill settings:", fillSettings);
 
@@ -386,33 +388,43 @@
     }
 
     function fillForm() {
-      const inputs = document.querySelectorAll("input");
-      const selects = document.querySelectorAll("select");
-      const textareas = document.querySelectorAll("textarea");
       const reactSelects = document.querySelectorAll('[class*="react-select"], [class*="Select"]');
       const comboboxes = document.querySelectorAll('button[role="combobox"]');
-      const contentEditables = document.querySelectorAll('[contenteditable="true"]');
 
-      inputs.forEach((input) => {
-        if (!filledElements.has(input)) {
-          fillInput(input);
-          filledElements.add(input);
-        }
-      });
+      if (!executionOptions.customOnly) {
+        const inputs = document.querySelectorAll("input");
+        const selects = document.querySelectorAll("select");
+        const textareas = document.querySelectorAll("textarea");
+        const contentEditables = document.querySelectorAll('[contenteditable="true"]');
 
-      selects.forEach((select) => {
-        if (!filledElements.has(select)) {
-          fillSelect(select);
-          filledElements.add(select);
-        }
-      });
+        inputs.forEach((input) => {
+          if (!filledElements.has(input)) {
+            fillInput(input);
+            filledElements.add(input);
+          }
+        });
 
-      textareas.forEach((text) => {
-        if (!filledElements.has(text)) {
-          fillTextarea(text);
-          filledElements.add(text);
-        }
-      });
+        selects.forEach((select) => {
+          if (!filledElements.has(select)) {
+            fillSelect(select);
+            filledElements.add(select);
+          }
+        });
+
+        textareas.forEach((text) => {
+          if (!filledElements.has(text)) {
+            fillTextarea(text);
+            filledElements.add(text);
+          }
+        });
+
+        contentEditables.forEach((element) => {
+          if (!filledElements.has(element)) {
+            fillContentEditable(element);
+            filledElements.add(element);
+          }
+        });
+      }
 
       reactSelects.forEach((element) => {
         if (!filledElements.has(element)) {
@@ -428,12 +440,6 @@
         }
       });
 
-      contentEditables.forEach((element) => {
-        if (!filledElements.has(element)) {
-          fillContentEditable(element);
-          filledElements.add(element);
-        }
-      });
     }
 
     global.SmartFillerConstants.DYNAMIC_RETRY_DELAYS_MS.forEach((delay) => {
@@ -442,7 +448,7 @@
 
     if (report) {
       report.notes.push(
-        `Legacy engine executed through new Phase 1 scaffold using faker locale ${fakerLocale}`
+        `Legacy engine executed as ${executionOptions.customOnly ? "custom-control fallback" : "full fallback"} using faker locale ${fakerLocale}`
       );
     }
 
