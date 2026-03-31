@@ -6,13 +6,14 @@
   <title>Smart Filler Test - Dynamic Form</title>
   <style>
     :root {
-      --bg: #f3f5f9;
-      --panel: rgba(255, 255, 255, 0.96);
-      --border: #d6dce6;
-      --text: #142033;
+      --bg: #f1f4f8;
+      --panel: rgba(255, 255, 255, 0.95);
+      --border: #d6dde8;
+      --text: #162033;
       --muted: #60708c;
-      --accent: #0a7a5a;
+      --accent: #0e7a61;
       --accent-soft: #e6f7f1;
+      --warning: #c06a2b;
     }
 
     * {
@@ -24,80 +25,40 @@
       font-family: Georgia, "Times New Roman", serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, #e2fff5 0, transparent 28%),
-        radial-gradient(circle at bottom right, #dce8ff 0, transparent 30%),
-        var(--bg);
+        radial-gradient(circle at top left, #e5fff5 0, transparent 26%),
+        radial-gradient(circle at bottom right, #dce9ff 0, transparent 30%),
+        linear-gradient(180deg, #f6f8fc 0%, var(--bg) 100%);
     }
 
     main {
-      max-width: 920px;
+      max-width: 1024px;
       margin: 32px auto;
       padding: 24px;
     }
 
     .intro {
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
 
     .intro h1 {
       margin: 0 0 10px;
-      font-size: 34px;
+      font-size: 36px;
     }
 
     .intro p {
       margin: 0;
       color: var(--muted);
       line-height: 1.6;
-      max-width: 760px;
+      max-width: 780px;
     }
 
     .panel {
       background: var(--panel);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: 0 24px 80px rgba(17, 28, 45, 0.12);
+      border-radius: 24px;
+      box-shadow: 0 24px 90px rgba(17, 28, 45, 0.12);
       padding: 24px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .field.full {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
-
-    input,
-    textarea,
-    .combo-button,
-    .language-button {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: #fff;
-      color: var(--text);
-      font: inherit;
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
     }
 
     .toolbar {
@@ -113,8 +74,8 @@
 
     .toolbar strong {
       display: block;
-      font-size: 15px;
       margin-bottom: 4px;
+      font-size: 15px;
     }
 
     .toolbar span {
@@ -128,10 +89,83 @@
     }
 
     .language-button {
-      width: auto;
       min-width: 54px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
       background: #fff;
+      color: var(--text);
+      font: inherit;
       cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field,
+    .section-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full,
+    .section-card.full {
+      grid-column: 1 / -1;
+    }
+
+    .section-card {
+      padding: 18px;
+      border: 1px solid rgba(14, 122, 97, 0.14);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fbfffd 0%, #f4fbf8 100%);
+    }
+
+    .section-card h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-card p {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    label,
+    .group-label {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    input,
+    select,
+    textarea,
+    .combo-button,
+    .editable-surface {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea,
+    .editable-surface {
+      min-height: 104px;
+      resize: vertical;
+    }
+
+    .editable-surface:empty::before {
+      content: attr(data-placeholder);
+      color: #95a1b7;
     }
 
     .combo {
@@ -141,12 +175,12 @@
     .combo-button {
       text-align: left;
       cursor: pointer;
-      background: #fff;
     }
 
     .combo-list {
       position: absolute;
       inset: calc(100% + 8px) 0 auto 0;
+      z-index: 3;
       margin: 0;
       padding: 8px;
       list-style: none;
@@ -155,7 +189,6 @@
       background: #fff;
       box-shadow: 0 18px 40px rgba(17, 28, 45, 0.12);
       display: none;
-      z-index: 2;
     }
 
     .combo-list[data-open="true"] {
@@ -172,6 +205,26 @@
       background: #eef5ff;
     }
 
+    .choice-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      min-height: 48px;
+    }
+
+    .choice-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .choice-row input {
+      width: auto;
+      margin: 0;
+    }
+
     .hidden {
       display: none;
     }
@@ -180,9 +233,14 @@
       margin-top: 18px;
       color: var(--muted);
       font-size: 14px;
+      line-height: 1.5;
     }
 
-    @media (max-width: 720px) {
+    .status strong {
+      color: var(--warning);
+    }
+
+    @media (max-width: 760px) {
       .grid {
         grid-template-columns: 1fr;
       }
@@ -197,10 +255,11 @@
 <body>
   <main>
     <section class="intro">
-      <h1>Dynamic and Custom Control Test Form</h1>
+      <h1>Dynamic Workflow Stress Test</h1>
       <p>
-        Use this page to check delayed field rendering, custom combobox behavior,
-        and protection against accidental language selector changes.
+        This page is designed to exercise delayed rendering, custom comboboxes,
+        follow-up sections, radios, checkboxes, native selects, and contenteditable
+        notes so the extension can be tested against a more realistic multi-step form.
       </p>
     </section>
 
@@ -208,7 +267,7 @@
       <div class="toolbar">
         <div>
           <strong>Language Switcher Test</strong>
-          <span>The extension should avoid selecting these buttons.</span>
+          <span>The extension should leave these buttons untouched.</span>
         </div>
         <div class="language-switcher">
           <button class="language-button" type="button">EN</button>
@@ -246,11 +305,13 @@
                 <li role="option" data-value="demo">Product Demo</li>
                 <li role="option" data-value="quote">Pricing Quote</li>
                 <li role="option" data-value="support">Support Issue</li>
+                <li role="option" data-value="migration">Data Migration</li>
               </ul>
             </div>
           </div>
 
-          <div id="delayedFields" class="field full hidden"></div>
+          <div id="phaseOneSection" class="section-card full hidden"></div>
+          <div id="phaseTwoSection" class="section-card full hidden"></div>
 
           <div class="field full">
             <label for="message">Project Notes</label>
@@ -259,60 +320,233 @@
         </div>
 
         <p class="status" id="statusText">
-          Delayed fields appear one second after a request type is selected.
+          <strong>Step 1:</strong> Choose a request type. This reveals more fields after staggered delays.
         </p>
       </form>
     </section>
   </main>
 
   <script>
-    const comboButton = document.getElementById("requestType");
-    const comboList = document.getElementById("requestTypeList");
-    const delayedFields = document.getElementById("delayedFields");
+    const comboButtons = Array.from(document.querySelectorAll(".combo-button"));
+    const requestTypeButton = document.getElementById("requestType");
+    const requestTypeList = document.getElementById("requestTypeList");
+    const phaseOneSection = document.getElementById("phaseOneSection");
+    const phaseTwoSection = document.getElementById("phaseTwoSection");
     const statusText = document.getElementById("statusText");
 
-    function closeCombo() {
-      comboList.dataset.open = "false";
-      comboButton.setAttribute("aria-expanded", "false");
-    }
-
-    function openCombo() {
-      comboList.dataset.open = "true";
-      comboButton.setAttribute("aria-expanded", "true");
-    }
-
-    comboButton.addEventListener("click", () => {
-      if (comboList.dataset.open === "true") {
-        closeCombo();
-      } else {
-        openCombo();
+    function closeCombo(button) {
+      const listId = button.getAttribute("aria-controls");
+      const list = document.getElementById(listId);
+      if (!list) {
+        return;
       }
-    });
 
-    comboList.querySelectorAll("[role='option']").forEach((option) => {
-      option.addEventListener("click", () => {
-        comboButton.textContent = option.textContent;
-        closeCombo();
-        delayedFields.classList.add("hidden");
-        delayedFields.innerHTML = "";
-        statusText.textContent = "Loading dependent fields...";
+      list.dataset.open = "false";
+      button.setAttribute("aria-expanded", "false");
+    }
 
-        setTimeout(() => {
-          delayedFields.innerHTML = [
-            '<label for="companyName">Company Name</label>',
-            '<input id="companyName" name="companyName" type="text" placeholder="Company name">',
-            '<label for="contactPhone">Contact Phone</label>',
-            '<input id="contactPhone" name="contactPhone" type="tel" placeholder="Phone number">'
-          ].join("");
-          delayedFields.classList.remove("hidden");
-          statusText.textContent = "Dependent fields are now visible.";
-        }, 1000);
+    function openCombo(button) {
+      const listId = button.getAttribute("aria-controls");
+      const list = document.getElementById(listId);
+      if (!list) {
+        return;
+      }
+
+      comboButtons.forEach((item) => closeCombo(item));
+      list.dataset.open = "true";
+      button.setAttribute("aria-expanded", "true");
+    }
+
+    function toggleCombo(button) {
+      const list = document.getElementById(button.getAttribute("aria-controls"));
+      if (!list) {
+        return;
+      }
+
+      if (list.dataset.open === "true") {
+        closeCombo(button);
+      } else {
+        openCombo(button);
+      }
+    }
+
+    function wireCombobox(button) {
+      button.addEventListener("click", () => toggleCombo(button));
+    }
+
+    function buildPhaseOneMarkup(requestType) {
+      const requestLabel = requestType === "migration" ? "Migration Scope" : "Environment";
+
+      return `
+        <h2>Phase 1: Operational Context</h2>
+        <p>These fields appear 1.2 seconds after the primary request type is selected.</p>
+        <div class="grid">
+          <div class="field">
+            <label for="companyName">Company Name</label>
+            <input id="companyName" name="companyName" type="text" placeholder="Company name">
+          </div>
+          <div class="field">
+            <label for="contactPhone">Contact Phone</label>
+            <input id="contactPhone" name="contactPhone" type="tel" placeholder="Phone number">
+          </div>
+          <div class="field">
+            <label for="budgetBand">Budget Band</label>
+            <select id="budgetBand" name="budgetBand">
+              <option value="">Select budget band</option>
+              <option>$5k - $10k</option>
+              <option>$10k - $25k</option>
+              <option>$25k - $50k</option>
+              <option>$50k+</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="teamSize">Team Size</label>
+            <input id="teamSize" name="teamSize" type="number" min="1" max="500" placeholder="Estimated users">
+          </div>
+          <div class="field full">
+            <span class="group-label">${requestLabel}</span>
+            <div class="choice-row">
+              <label><input type="radio" name="environment" value="sandbox"> Sandbox</label>
+              <label><input type="radio" name="environment" value="staging"> Staging</label>
+              <label><input type="radio" name="environment" value="production"> Production</label>
+            </div>
+          </div>
+          <div class="field full">
+            <label for="priorityLevel">Priority Level</label>
+            <div class="combo">
+              <button
+                id="priorityLevel"
+                class="combo-button"
+                type="button"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="priorityLevelList"
+              >
+                Select priority
+              </button>
+              <ul id="priorityLevelList" class="combo-list" role="listbox" data-open="false">
+                <li role="option" data-value="standard">Standard</li>
+                <li role="option" data-value="high">High</li>
+                <li role="option" data-value="urgent">Urgent</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildPhaseTwoMarkup() {
+      return `
+        <h2>Phase 2: Delivery Details</h2>
+        <p>These fields arrive after another delayed render to mimic API-loaded sections.</p>
+        <div class="grid">
+          <div class="field">
+            <label for="startDate">Preferred Start Date</label>
+            <input id="startDate" name="startDate" type="date">
+          </div>
+          <div class="field">
+            <label for="region">Deployment Region</label>
+            <select id="region" name="region">
+              <option value="">Select a region</option>
+              <option>North America</option>
+              <option>Europe</option>
+              <option>India</option>
+              <option>Middle East</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="streetAddress">Street Address</label>
+            <input id="streetAddress" name="streetAddress" type="text" placeholder="Street address">
+          </div>
+          <div class="field">
+            <label for="postalCode">Postal Code</label>
+            <input id="postalCode" name="postalCode" type="text" placeholder="Postal code">
+          </div>
+          <div class="field full">
+            <span class="group-label">Add-ons</span>
+            <div class="choice-row">
+              <label><input id="needsTraining" name="needsTraining" type="checkbox"> Team training required</label>
+              <label><input id="needsMigrationHelp" name="needsMigrationHelp" type="checkbox"> Migration support required</label>
+            </div>
+          </div>
+          <div class="field full">
+            <label for="implementationNotes">Implementation Notes</label>
+            <div
+              id="implementationNotes"
+              name="implementationNotes"
+              class="editable-surface"
+              contenteditable="true"
+              data-placeholder="Extra implementation notes"
+            ></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function wireListSelection(listId, buttonId, onSelect) {
+      const list = document.getElementById(listId);
+      const button = document.getElementById(buttonId);
+
+      if (!list || !button) {
+        return;
+      }
+
+      list.querySelectorAll("[role='option']").forEach((option) => {
+        option.addEventListener("click", () => {
+          button.textContent = option.textContent;
+          button.dataset.value = option.dataset.value || option.textContent.trim();
+          closeCombo(button);
+
+          if (onSelect) {
+            onSelect(option);
+          }
+        });
       });
+    }
+
+    function resetDynamicSections() {
+      phaseOneSection.classList.add("hidden");
+      phaseTwoSection.classList.add("hidden");
+      phaseOneSection.innerHTML = "";
+      phaseTwoSection.innerHTML = "";
+    }
+
+    function mountPhaseOne(requestType) {
+      phaseOneSection.innerHTML = buildPhaseOneMarkup(requestType);
+      phaseOneSection.classList.remove("hidden");
+      wireCombobox(document.getElementById("priorityLevel"));
+      wireListSelection("priorityLevelList", "priorityLevel");
+    }
+
+    function mountPhaseTwo() {
+      phaseTwoSection.innerHTML = buildPhaseTwoMarkup();
+      phaseTwoSection.classList.remove("hidden");
+    }
+
+    wireCombobox(requestTypeButton);
+
+    wireListSelection("requestTypeList", "requestType", (option) => {
+      const requestType = option.dataset.value || "demo";
+
+      resetDynamicSections();
+      statusText.innerHTML = "<strong>Loading:</strong> Phase 1 fields are being rendered.";
+
+      setTimeout(() => {
+        mountPhaseOne(requestType);
+        statusText.innerHTML = "<strong>Phase 1 ready:</strong> Budget, company, radio group, and a second combobox are now visible.";
+      }, 1200);
+
+      setTimeout(() => {
+        mountPhaseTwo();
+        statusText.innerHTML = "<strong>Phase 2 ready:</strong> Additional address, region, checkbox, and contenteditable fields are now visible.";
+      }, 2600);
     });
 
     document.addEventListener("click", (event) => {
       if (!event.target.closest(".combo")) {
-        closeCombo();
+        comboButtons
+          .concat(Array.from(document.querySelectorAll(".combo-button")))
+          .forEach((button) => closeCombo(button));
       }
     });
   </script>

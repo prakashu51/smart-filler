@@ -18,11 +18,25 @@
 
     const filledElements = new Set();
     const radioGroups = new Set();
+    const elementReportState = new WeakMap();
 
-    function incrementReport(key) {
-      if (report && typeof report[key] === "number") {
-        report[key] += 1;
+    function incrementReport(key, element) {
+      if (!report || typeof report[key] !== "number" || !element) {
+        return;
       }
+
+      const previousState = elementReportState.get(element);
+
+      if (previousState === key) {
+        return;
+      }
+
+      if (previousState && typeof report[previousState] === "number") {
+        report[previousState] = Math.max(0, report[previousState] - 1);
+      }
+
+      report[key] += 1;
+      elementReportState.set(element, key);
     }
 
     function dispatchFieldEvents(element) {
@@ -101,7 +115,7 @@
 
     function fillInput(input) {
       if (!isFillable(input) || hasUserValue(input)) {
-        incrementReport("skipped");
+        incrementReport("skipped", input);
         return;
       }
 
@@ -110,7 +124,7 @@
       let value = "";
 
       if (["button", "submit", "reset", "image", "file", "hidden"].includes(type)) {
-        incrementReport("skipped");
+        incrementReport("skipped", input);
         return;
       }
 
@@ -189,35 +203,35 @@
       } else if (type === "checkbox") {
         input.checked = Math.random() > 0.5;
         dispatchFieldEvents(input);
-        incrementReport("filled");
+        incrementReport("filled", input);
         return;
       } else if (type === "radio") {
         const groupKey = input.name || input.id;
 
         if (!groupKey || radioGroups.has(groupKey)) {
-          incrementReport("skipped");
+          incrementReport("skipped", input);
           return;
         }
 
         radioGroups.add(groupKey);
         input.checked = true;
         dispatchFieldEvents(input);
-        incrementReport("filled");
+        incrementReport("filled", input);
         return;
       }
 
       if (value) {
         input.value = value;
         dispatchFieldEvents(input);
-        incrementReport("filled");
+        incrementReport("filled", input);
       } else {
-        incrementReport("skipped");
+        incrementReport("skipped", input);
       }
     }
 
     function fillSelect(select) {
       if (!isFillable(select) || hasUserValue(select)) {
-        incrementReport("skipped");
+        incrementReport("skipped", select);
         return;
       }
 
@@ -231,19 +245,19 @@
       });
 
       if (validOptions.length === 0) {
-        incrementReport("skipped");
+        incrementReport("skipped", select);
         return;
       }
 
       const selectedOption = validOptions[Math.floor(Math.random() * validOptions.length)];
       select.value = selectedOption.value;
       dispatchFieldEvents(select);
-      incrementReport("filled");
+      incrementReport("filled", select);
     }
 
     function fillReactSelect(element) {
       if (!isVisible(element)) {
-        incrementReport("skipped");
+        incrementReport("skipped", element);
         return;
       }
 
@@ -274,13 +288,13 @@
               if (options.length > 0) {
                 const randomIndex = Math.floor(Math.random() * options.length);
                 options[randomIndex].click();
-                incrementReport("filled");
+                incrementReport("filled", element);
               }
             }
           }, delay);
         });
       } else {
-        incrementReport("skipped");
+        incrementReport("skipped", element);
       }
     }
 
@@ -308,7 +322,7 @@
 
     function fillCustomCombobox(button) {
       if (!isFillable(button) || isLanguageSelector(button) || hasUserValue(button)) {
-        incrementReport("skipped");
+        incrementReport("skipped", button);
         return;
       }
 
@@ -357,7 +371,7 @@
                   : safeOptions[0];
 
                 selectedOption.click();
-                incrementReport("filled");
+                incrementReport("filled", button);
               }
             }
           }
@@ -367,24 +381,24 @@
 
     function fillTextarea(textarea) {
       if (!isFillable(textarea) || hasUserValue(textarea)) {
-        incrementReport("skipped");
+        incrementReport("skipped", textarea);
         return;
       }
 
       textarea.value = faker.lorem.sentences(2);
       dispatchFieldEvents(textarea);
-      incrementReport("filled");
+      incrementReport("filled", textarea);
     }
 
     function fillContentEditable(element) {
       if (!isFillable(element) || hasUserValue(element)) {
-        incrementReport("skipped");
+        incrementReport("skipped", element);
         return;
       }
 
       element.textContent = faker.lorem.sentences(2);
       dispatchFieldEvents(element);
-      incrementReport("filled");
+      incrementReport("filled", element);
     }
 
     function fillForm() {

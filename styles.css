@@ -165,7 +165,8 @@ button:disabled {
 }
 
 .panel-header h2,
-.notes-block h3 {
+.notes-block h3,
+.details-block h3 {
   margin: 0;
   font-size: 14px;
 }
@@ -229,4 +230,68 @@ button:disabled {
   color: #4b5565;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.details-block {
+  margin-top: 14px;
+}
+
+.details-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.details-list li {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffaf4 0%, #f5ede1 100%);
+  border: 1px solid rgba(165, 133, 94, 0.18);
+}
+
+.detail-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-status {
+  font-weight: 700;
+}
+
+.detail-status[data-status="filled"] {
+  color: #0f7a57;
+}
+
+.detail-status[data-status="skipped"] {
+  color: #9c5a21;
+}
+
+.detail-status[data-status="low_confidence"] {
+  color: #9252b8;
+}
+
+.detail-type {
+  color: #7a818f;
+}
+
+.detail-field {
+  margin: 0;
+  color: #263041;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.detail-meta {
+  margin: 2px 0 0;
+  color: #687284;
+  font-size: 11px;
+  line-height: 1.4;
 }

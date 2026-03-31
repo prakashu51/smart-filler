@@ -3,6 +3,45 @@
     return field.label || field.name || field.id || field.pathHint || "unknown";
   }
 
+  function createFieldKey(field, mapping) {
+    return [
+      field.pathHint || "",
+      field.id || "",
+      field.name || "",
+      field.label || "",
+      mapping && mapping.fieldType ? mapping.fieldType : "",
+      typeof field.index === "number" ? field.index : ""
+    ].join("|");
+  }
+
+  function ensureTracking(report) {
+    if (!report._fieldOutcomes) {
+      report._fieldOutcomes = {};
+    }
+  }
+
+  function applyOutcome(report, field, mapping, nextStatus) {
+    ensureTracking(report);
+
+    const key = createFieldKey(field, mapping);
+    const previousStatus = report._fieldOutcomes[key];
+
+    if (previousStatus === nextStatus) {
+      return false;
+    }
+
+    if (previousStatus && typeof report[previousStatus] === "number") {
+      report[previousStatus] = Math.max(0, report[previousStatus] - 1);
+    }
+
+    if (typeof report[nextStatus] === "number") {
+      report[nextStatus] += 1;
+    }
+
+    report._fieldOutcomes[key] = nextStatus;
+    return true;
+  }
+
   function pushDetail(report, entry) {
     if (report.details.length < global.SmartFillerConstants.DETAIL_LOG_LIMIT) {
       report.details.push(entry);
@@ -24,7 +63,10 @@
   }
 
   function recordFilled(report, field, value, mapping) {
-    report.filled += 1;
+    if (!applyOutcome(report, field, mapping, "filled")) {
+      return;
+    }
+
     pushDetail(report, {
       status: "filled",
       field: createFieldLabel(field),
@@ -35,7 +77,10 @@
   }
 
   function recordSkipped(report, field, reason, mapping) {
-    report.skipped += 1;
+    if (!applyOutcome(report, field, mapping, "skipped")) {
+      return;
+    }
+
     pushDetail(report, {
       status: "skipped",
       field: createFieldLabel(field),
@@ -46,7 +91,10 @@
   }
 
   function recordLowConfidence(report, field, mapping) {
-    report.lowConfidence += 1;
+    if (!applyOutcome(report, field, mapping, "lowConfidence")) {
+      return;
+    }
+
     pushDetail(report, {
       status: "low_confidence",
       field: createFieldLabel(field),

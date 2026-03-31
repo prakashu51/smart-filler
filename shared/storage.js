@@ -49,8 +49,16 @@
   }
 
   async function saveLastRunReport(report) {
+    const sanitizedReport = Object.keys(report || {}).reduce((nextReport, key) => {
+      if (!key.startsWith("_")) {
+        nextReport[key] = report[key];
+      }
+
+      return nextReport;
+    }, {});
+
     await setLocalStorageValue({
-      [STORAGE_KEYS.lastRunReport]: report
+      [STORAGE_KEYS.lastRunReport]: sanitizedReport
     });
   }
 

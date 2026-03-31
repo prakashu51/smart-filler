@@ -11,6 +11,7 @@ const engineVersion = document.getElementById("engineVersion");
 const reportLocale = document.getElementById("reportLocale");
 const snapshotSummary = document.getElementById("snapshotSummary");
 const notesList = document.getElementById("notesList");
+const detailsList = document.getElementById("detailsList");
 
 function setStatus(state, title, message) {
   statusBanner.dataset.state = state;
@@ -53,7 +54,7 @@ function formatSnapshot(snapshot) {
     `${snapshot.comboboxes || 0} combos`
   ];
 
-  return values.join(" • ");
+  return values.join(" / ");
 }
 
 function renderNotes(notes) {
@@ -70,6 +71,83 @@ function renderNotes(notes) {
   });
 }
 
+function formatDetailStatus(status) {
+  if (status === "low_confidence") {
+    return "Low Confidence";
+  }
+
+  return status ? status.replace(/_/g, " ") : "Unknown";
+}
+
+function formatDetailMeta(detail) {
+  if (detail.status === "filled") {
+    return detail.valuePreview
+      ? `Value: ${detail.valuePreview}`
+      : "Value generated";
+  }
+
+  if (detail.status === "skipped") {
+    return detail.reason
+      ? `Reason: ${detail.reason}`
+      : "Skipped without a recorded reason";
+  }
+
+  if (detail.status === "low_confidence") {
+    return Array.isArray(detail.reasons) && detail.reasons.length > 0
+      ? `Signals: ${detail.reasons.join(", ")}`
+      : "Confidence below the threshold";
+  }
+
+  return "";
+}
+
+function renderDetails(details) {
+  detailsList.innerHTML = "";
+
+  const items = Array.isArray(details) && details.length > 0
+    ? details.slice(-6).reverse()
+    : null;
+
+  if (!items) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = "No field activity recorded yet.";
+    detailsList.appendChild(emptyItem);
+    return;
+  }
+
+  items.forEach((detail) => {
+    const listItem = document.createElement("li");
+
+    const topLine = document.createElement("div");
+    topLine.className = "detail-topline";
+
+    const status = document.createElement("span");
+    status.className = "detail-status";
+    status.dataset.status = detail.status || "unknown";
+    status.textContent = formatDetailStatus(detail.status);
+
+    const type = document.createElement("span");
+    type.className = "detail-type";
+    type.textContent = detail.fieldType || "-";
+
+    topLine.appendChild(status);
+    topLine.appendChild(type);
+
+    const field = document.createElement("p");
+    field.className = "detail-field";
+    field.textContent = detail.field || "Unknown field";
+
+    const meta = document.createElement("p");
+    meta.className = "detail-meta";
+    meta.textContent = formatDetailMeta(detail);
+
+    listItem.appendChild(topLine);
+    listItem.appendChild(field);
+    listItem.appendChild(meta);
+    detailsList.appendChild(listItem);
+  });
+}
+
 function renderReport(report) {
   if (!report) {
     reportTimestamp.textContent = "No runs yet";
@@ -80,6 +158,7 @@ function renderReport(report) {
     reportLocale.textContent = "-";
     snapshotSummary.textContent = "-";
     renderNotes([]);
+    renderDetails([]);
     return;
   }
 
@@ -91,6 +170,7 @@ function renderReport(report) {
   reportLocale.textContent = formatLocale(report.fillSettings);
   snapshotSummary.textContent = formatSnapshot(report.snapshot);
   renderNotes(report.notes);
+  renderDetails(report.details);
 }
 
 async function waitForUpdatedReport(previousTimestamp) {
