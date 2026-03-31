@@ -173,11 +173,12 @@ function renderReport(report) {
   renderDetails(report.details);
 }
 
-async function waitForUpdatedReport(previousTimestamp) {
+async function waitForUpdatedReport(previousRunId) {
   const timeoutMs = 20000;
 
   return new Promise((resolve) => {
     let settled = false;
+    let latestSeenReport = null;
 
     function finish(report) {
       if (settled) {
@@ -191,6 +192,32 @@ async function waitForUpdatedReport(previousTimestamp) {
       resolve(report);
     }
 
+    function isNewRun(report) {
+      const runId = report.runId || report.timestamp;
+      return !!runId && runId !== previousRunId;
+    }
+
+    function handleProgress(report) {
+      latestSeenReport = report;
+      renderReport(report);
+
+      if (report.status === "completed") {
+        setStatus(
+          "success",
+          "Completed",
+          `Run saved with ${report.filled || 0} fields filled and ${report.skipped || 0} skipped.`
+        );
+        finish(report);
+        return;
+      }
+
+      setStatus(
+        "running",
+        "Initial Fill Complete",
+        "The first pass is done. Waiting for dynamic sections and the final report."
+      );
+    }
+
     function handleChange(changes, areaName) {
       if (areaName !== "local" || !changes.lastRunReport || !changes.lastRunReport.newValue) {
         return;
@@ -198,30 +225,41 @@ async function waitForUpdatedReport(previousTimestamp) {
 
       const nextReport = changes.lastRunReport.newValue;
 
-      if (
-        nextReport.timestamp &&
-        nextReport.timestamp !== previousTimestamp
-      ) {
-        finish(nextReport);
+      if (isNewRun(nextReport)) {
+        handleProgress(nextReport);
       }
     }
 
     const progressId = window.setTimeout(() => {
-      setStatus(
-        "running",
-        "Still Finishing",
-        "The form was likely filled. Waiting for the final run report from the background pass."
-      );
+      if (!latestSeenReport || latestSeenReport.status !== "completed") {
+        setStatus(
+          "running",
+          "Still Finishing",
+          "The form was likely filled. Waiting for the final run report from the background pass."
+        );
+      }
     }, 9000);
 
     const timeoutId = window.setTimeout(async () => {
       const latestReport = await SmartFillerStorage.getLastRunReport();
 
-      if (
-        latestReport &&
-        latestReport.timestamp &&
-        latestReport.timestamp !== previousTimestamp
-      ) {
+      if (latestReport && isNewRun(latestReport)) {
+        if (latestReport.status === "completed") {
+          renderReport(latestReport);
+          setStatus(
+            "success",
+            "Completed",
+            `Run saved with ${latestReport.filled || 0} fields filled and ${latestReport.skipped || 0} skipped.`
+          );
+        } else {
+          renderReport(latestReport);
+          setStatus(
+            "running",
+            "Report In Progress",
+            "The latest run report arrived, but the final completion update is still pending."
+          );
+        }
+
         finish(latestReport);
         return;
       }
@@ -258,7 +296,7 @@ fillButton.addEventListener("click", async () => {
       selectedLocale
     });
     const previousReport = await SmartFillerStorage.getLastRunReport();
-    const previousTimestamp = previousReport ? previousReport.timestamp : null;
+    const previousRunId = previousReport ? (previousReport.runId || previousReport.timestamp) : null;
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     await SmartFillerStorage.saveFillSettings(normalizedFillSettings);
@@ -284,16 +322,9 @@ fillButton.addEventListener("click", async () => {
 
     setStatus("running", "Running", "Waiting for the page run report to be saved.");
 
-    const latestReport = await waitForUpdatedReport(previousTimestamp);
+    const latestReport = await waitForUpdatedReport(previousRunId);
 
-    if (latestReport) {
-      renderReport(latestReport);
-      setStatus(
-        "success",
-        "Completed",
-        `Run saved with ${latestReport.filled || 0} fields filled and ${latestReport.skipped || 0} skipped.`
-      );
-    } else {
+    if (!latestReport) {
       setStatus(
         "running",
         "Report Delayed",

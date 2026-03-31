@@ -34,6 +34,11 @@
     });
 
     executeFillCycle(context);
+    global.SmartFillerReport.setLifecycle(report, {
+      status: "running",
+      phase: "initial_fill_complete"
+    });
+    await global.SmartFillerStorage.saveLastRunReport(report);
     observer.start();
 
     if (
@@ -43,6 +48,11 @@
     ) {
       global.SmartFillerReport.addNote(report, "Legacy fallback enabled for custom control support.");
       await global.SmartFillerLegacyEngine.run(fillSettings, report, { customOnly: true });
+      global.SmartFillerReport.setLifecycle(report, {
+        status: "running",
+        phase: "custom_control_fallback_complete"
+      });
+      await global.SmartFillerStorage.saveLastRunReport(report);
     }
 
     if (snapshot.reactSelects > 0) {
@@ -56,6 +66,10 @@
       }, global.SmartFillerConstants.OBSERVER_RUNTIME_MS + 100);
     });
 
+    global.SmartFillerReport.setLifecycle(report, {
+      status: "completed",
+      phase: "finalized"
+    });
     await global.SmartFillerStorage.saveLastRunReport(report);
   }
 

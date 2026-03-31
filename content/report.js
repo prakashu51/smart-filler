@@ -49,11 +49,18 @@
   }
 
   function createInitialReport(fillSettings, snapshot) {
+    const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const createdAt = new Date().toISOString();
+
     return {
+      runId,
       engineVersion: global.SmartFillerConstants.ENGINE_VERSION,
       fillSettings,
       snapshot,
-      timestamp: new Date().toISOString(),
+      timestamp: createdAt,
+      updatedAt: createdAt,
+      status: "running",
+      phase: "initializing",
       filled: 0,
       skipped: 0,
       lowConfidence: 0,
@@ -108,11 +115,29 @@
     report.notes.push(note);
   }
 
+  function setLifecycle(report, nextState) {
+    if (!report || !nextState) {
+      return report;
+    }
+
+    if (nextState.status) {
+      report.status = nextState.status;
+    }
+
+    if (nextState.phase) {
+      report.phase = nextState.phase;
+    }
+
+    report.updatedAt = new Date().toISOString();
+    return report;
+  }
+
   global.SmartFillerReport = {
     createInitialReport,
     recordFilled,
     recordSkipped,
     recordLowConfidence,
-    addNote
+    addNote,
+    setLifecycle
   };
 })(window);
