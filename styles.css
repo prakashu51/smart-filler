@@ -1,39 +1,232 @@
 body {
-  width: 200px;
-  padding: 15px;
-  font-family: Arial, sans-serif;
+  width: 360px;
+  margin: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255, 207, 122, 0.45), transparent 38%),
+    linear-gradient(180deg, #f7f1e7 0%, #efe5d6 100%);
+  color: #1f2430;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-h2 {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  text-align: center;
+* {
+  box-sizing: border-box;
 }
 
-label {
+.popup-shell {
+  padding: 16px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hero-copy h1 {
+  margin: 4px 0 8px;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #8d5a1e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-note {
+  margin: 0;
+  color: #5d6677;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.hero-mark {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffb347 0%, #ff7d4d 100%);
+  color: #fffaf2;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 14px 30px rgba(194, 99, 41, 0.24);
+}
+
+.panel {
+  background: rgba(255, 252, 247, 0.9);
+  border: 1px solid rgba(165, 133, 94, 0.22);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 18px 40px rgba(44, 34, 20, 0.08);
+}
+
+.controls-panel {
+  margin-bottom: 12px;
+}
+
+.field-label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  color: #5c4630;
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+select,
+button {
+  width: 100%;
+  border-radius: 14px;
+  font: inherit;
 }
 
 select {
-  width: 100%;
-  padding: 5px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid #d8c0a1;
+  background: #fffaf2;
+  color: #1f2430;
 }
 
 button {
-  width: 100%;
-  padding: 8px;
-  background: #4285f4;
-  color: white;
-  border: none;
-  border-radius: 3px;
+  padding: 12px 16px;
+  border: 0;
+  background: linear-gradient(135deg, #1d7d63 0%, #135c6a 100%);
+  color: #fdf9f4;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 12px 26px rgba(19, 92, 106, 0.24);
 }
 
 button:hover {
-  background: #3367d6;
+  filter: brightness(1.03);
+}
+
+button:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.status-banner {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f5efe4;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.status-banner strong {
+  font-size: 13px;
+}
+
+.status-banner span {
+  color: #5d6677;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.status-banner[data-state="ready"] {
+  border-color: rgba(141, 90, 30, 0.15);
+}
+
+.status-banner[data-state="running"] {
+  background: #fff2db;
+  border-color: rgba(220, 136, 27, 0.32);
+}
+
+.status-banner[data-state="success"] {
+  background: #e9f6f0;
+  border-color: rgba(29, 125, 99, 0.28);
+}
+
+.status-banner[data-state="error"] {
+  background: #fdecec;
+  border-color: rgba(185, 65, 65, 0.28);
+}
+
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panel-header h2,
+.notes-block h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.timestamp {
+  color: #6c7280;
+  font-size: 11px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  padding: 12px 10px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffaf4 0%, #f4eadc 100%);
+  border: 1px solid rgba(165, 133, 94, 0.2);
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #6c7280;
+  font-size: 11px;
+}
+
+.stat-card strong {
+  font-size: 20px;
+}
+
+.meta-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(165, 133, 94, 0.16);
+  font-size: 12px;
+}
+
+.meta-row:last-child {
+  border-bottom: 0;
+}
+
+.meta-label {
+  color: #6c7280;
+}
+
+.notes-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #4b5565;
+  font-size: 12px;
+  line-height: 1.5;
 }

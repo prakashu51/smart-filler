@@ -54,10 +54,16 @@
     });
   }
 
+  async function getLastRunReport() {
+    const result = await getLocalStorageValue([STORAGE_KEYS.lastRunReport]);
+    return result[STORAGE_KEYS.lastRunReport] || null;
+  }
+
   global.SmartFillerStorage = {
     STORAGE_KEYS,
     getFillSettings,
     saveFillSettings,
-    saveLastRunReport
+    saveLastRunReport,
+    getLastRunReport
   };
 })(window);

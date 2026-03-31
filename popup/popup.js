@@ -1,9 +1,184 @@
-document.getElementById("fillBtn").addEventListener("click", async () => {
+const fillButton = document.getElementById("fillBtn");
+const localeSelect = document.getElementById("locale");
+const statusBanner = document.getElementById("statusBanner");
+const statusTitle = document.getElementById("statusTitle");
+const statusText = document.getElementById("statusText");
+const reportTimestamp = document.getElementById("reportTimestamp");
+const filledCount = document.getElementById("filledCount");
+const skippedCount = document.getElementById("skippedCount");
+const lowConfidenceCount = document.getElementById("lowConfidenceCount");
+const engineVersion = document.getElementById("engineVersion");
+const reportLocale = document.getElementById("reportLocale");
+const snapshotSummary = document.getElementById("snapshotSummary");
+const notesList = document.getElementById("notesList");
+
+function setStatus(state, title, message) {
+  statusBanner.dataset.state = state;
+  statusTitle.textContent = title;
+  statusText.textContent = message;
+}
+
+function formatTimestamp(value) {
+  if (!value) {
+    return "No runs yet";
+  }
+
+  const date = new Date(value);
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function formatLocale(fillSettings) {
+  if (!fillSettings) {
+    return "-";
+  }
+
+  return `${fillSettings.locale || "-"} (${fillSettings.region || "-"})`;
+}
+
+function formatSnapshot(snapshot) {
+  if (!snapshot) {
+    return "-";
+  }
+
+  const values = [
+    `${snapshot.inputs || 0} inputs`,
+    `${snapshot.selects || 0} selects`,
+    `${snapshot.textareas || 0} textareas`,
+    `${snapshot.comboboxes || 0} combos`
+  ];
+
+  return values.join(" • ");
+}
+
+function renderNotes(notes) {
+  notesList.innerHTML = "";
+
+  const items = Array.isArray(notes) && notes.length > 0
+    ? notes.slice(0, 4)
+    : ["No notes recorded."];
+
+  items.forEach((note) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = note;
+    notesList.appendChild(listItem);
+  });
+}
+
+function renderReport(report) {
+  if (!report) {
+    reportTimestamp.textContent = "No runs yet";
+    filledCount.textContent = "0";
+    skippedCount.textContent = "0";
+    lowConfidenceCount.textContent = "0";
+    engineVersion.textContent = "-";
+    reportLocale.textContent = "-";
+    snapshotSummary.textContent = "-";
+    renderNotes([]);
+    return;
+  }
+
+  reportTimestamp.textContent = formatTimestamp(report.timestamp);
+  filledCount.textContent = String(report.filled || 0);
+  skippedCount.textContent = String(report.skipped || 0);
+  lowConfidenceCount.textContent = String(report.lowConfidence || 0);
+  engineVersion.textContent = report.engineVersion || "-";
+  reportLocale.textContent = formatLocale(report.fillSettings);
+  snapshotSummary.textContent = formatSnapshot(report.snapshot);
+  renderNotes(report.notes);
+}
+
+async function waitForUpdatedReport(previousTimestamp) {
+  const timeoutMs = 20000;
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    function finish(report) {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      chrome.storage.onChanged.removeListener(handleChange);
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(progressId);
+      resolve(report);
+    }
+
+    function handleChange(changes, areaName) {
+      if (areaName !== "local" || !changes.lastRunReport || !changes.lastRunReport.newValue) {
+        return;
+      }
+
+      const nextReport = changes.lastRunReport.newValue;
+
+      if (
+        nextReport.timestamp &&
+        nextReport.timestamp !== previousTimestamp
+      ) {
+        finish(nextReport);
+      }
+    }
+
+    const progressId = window.setTimeout(() => {
+      setStatus(
+        "running",
+        "Still Finishing",
+        "The form was likely filled. Waiting for the final run report from the background pass."
+      );
+    }, 9000);
+
+    const timeoutId = window.setTimeout(async () => {
+      const latestReport = await SmartFillerStorage.getLastRunReport();
+
+      if (
+        latestReport &&
+        latestReport.timestamp &&
+        latestReport.timestamp !== previousTimestamp
+      ) {
+        finish(latestReport);
+        return;
+      }
+
+      finish(null);
+    }, timeoutMs);
+
+    chrome.storage.onChanged.addListener(handleChange);
+  });
+}
+
+async function initializePopup() {
+  const data = await new Promise((resolve) => {
+    chrome.storage.local.get(["fillSettings", "selectedLocale"], (result) => resolve(result));
+  });
+
+  const normalized = SmartFillerConfig.normalizeFillSettings(
+    data.fillSettings || { selectedLocale: data.selectedLocale }
+  );
+  localeSelect.value = normalized.region === "IN" ? "en_IND" : "en";
+
+  const lastReport = await SmartFillerStorage.getLastRunReport();
+  renderReport(lastReport);
+  setStatus("ready", "Ready", "Open a page with a form and start a run.");
+}
+
+fillButton.addEventListener("click", async () => {
+  fillButton.disabled = true;
+  setStatus("running", "Running", "Injecting Smart Filler into the active tab.");
+
   try {
-    const selectedLocale = document.getElementById("locale").value;
+    const selectedLocale = localeSelect.value;
     const normalizedFillSettings = SmartFillerConfig.normalizeFillSettings({
       selectedLocale
     });
+    const previousReport = await SmartFillerStorage.getLastRunReport();
+    const previousTimestamp = previousReport ? previousReport.timestamp : null;
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     await SmartFillerStorage.saveFillSettings(normalizedFillSettings);
@@ -27,18 +202,39 @@ document.getElementById("fillBtn").addEventListener("click", async () => {
       ]
     });
 
-    window.close();
+    setStatus("running", "Running", "Waiting for the page run report to be saved.");
+
+    const latestReport = await waitForUpdatedReport(previousTimestamp);
+
+    if (latestReport) {
+      renderReport(latestReport);
+      setStatus(
+        "success",
+        "Completed",
+        `Run saved with ${latestReport.filled || 0} fields filled and ${latestReport.skipped || 0} skipped.`
+      );
+    } else {
+      setStatus(
+        "running",
+        "Report Delayed",
+        "The page likely finished filling, but the final report did not arrive before the popup timeout."
+      );
+    }
   } catch (error) {
     console.error("Extension error:", error);
-    alert("Error: Smart Filler could not be injected into this tab.");
+    setStatus(
+      "error",
+      "Failed",
+      error && error.message
+        ? error.message
+        : "Smart Filler could not be injected into this tab."
+    );
+  } finally {
+    fillButton.disabled = false;
   }
 });
 
-chrome.storage.local.get(["fillSettings", "selectedLocale"], (data) => {
-  const normalized = SmartFillerConfig.normalizeFillSettings(
-    data.fillSettings || { selectedLocale: data.selectedLocale }
-  );
-  const localeValue = normalized.region === "IN" ? "en_IND" : "en";
-
-  document.getElementById("locale").value = localeValue;
+initializePopup().catch((error) => {
+  console.error("Popup initialization failed:", error);
+  setStatus("error", "Failed", "Popup initialization could not read extension state.");
 });

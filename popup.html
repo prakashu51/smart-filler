@@ -1,18 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h2>Smart Filler</h2>
+  <main class="popup-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Smart Form Filler</p>
+        <h1>Run Autofill With Feedback</h1>
+        <p class="hero-note">Fill the active tab and review the latest run summary right here.</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true">SF</div>
+    </section>
 
-  <label for="locale">Select Locale:</label>
-  <select id="locale">
-    <option value="en">[US] United States</option>
-    <option value="en_IND">[IN] India</option>
-  </select>
+    <section class="panel controls-panel">
+      <label class="field-label" for="locale">Locale</label>
+      <select id="locale">
+        <option value="en">[US] United States</option>
+        <option value="en_IND">[IN] India</option>
+      </select>
 
-  <button id="fillBtn">Fill Form</button>
+      <button id="fillBtn" type="button">Fill Current Page</button>
+
+      <div id="statusBanner" class="status-banner" data-state="ready">
+        <strong id="statusTitle">Ready</strong>
+        <span id="statusText">Open a page with a form and start a run.</span>
+      </div>
+    </section>
+
+    <section class="panel report-panel">
+      <div class="panel-header">
+        <h2>Last Run</h2>
+        <span id="reportTimestamp" class="timestamp">No runs yet</span>
+      </div>
+
+      <div class="stats-grid">
+        <article class="stat-card">
+          <span class="stat-label">Filled</span>
+          <strong id="filledCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Skipped</span>
+          <strong id="skippedCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Low Confidence</span>
+          <strong id="lowConfidenceCount">0</strong>
+        </article>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-row">
+          <span class="meta-label">Engine</span>
+          <span id="engineVersion">-</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Locale</span>
+          <span id="reportLocale">-</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Snapshot</span>
+          <span id="snapshotSummary">-</span>
+        </div>
+      </div>
+
+      <div class="notes-block">
+        <h3>Notes</h3>
+        <ul id="notesList" class="notes-list">
+          <li>No report saved yet.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
 
   <script src="shared/config.js"></script>
   <script src="shared/storage.js"></script>
